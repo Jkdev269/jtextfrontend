@@ -1,0 +1,19 @@
+.homeContainer {
+    display: flex;
+    height: 100vh;
+    background-color: #222; /* Dark gray background */
+    color: white;
+  }
+  
+  .sidebarArea {
+    width: 25%; /* Adjust width as needed */
+    padding: 1rem;
+    border-right: 1px solid #444; /* Slightly lighter border */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .contentArea {
+    flex: 1;
+  }

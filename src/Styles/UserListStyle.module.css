@@ -1,0 +1,98 @@
+/* style.module.css (for UserList.js) */
+
+.userListContainer {
+    padding: 1rem;
+    background-color: #222; /* Dark background */
+    height: 100vh; /* Full screen height */
+    overflow-y: auto; /* Scroll if needed */
+  }
+  
+  .userListHeading {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: white; /* White text */
+  }
+  
+  .userListSearch {
+    padding: 0.5rem;
+    border: 1px solid #444; /* Darker border */
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    background-color: #333; /* Darker background */
+    color: white; /* White text */
+    outline: none; /* Remove default outline */
+    box-shadow: 0 0 0 2px #555; /* Subtle outline on focus */
+  }
+  
+  .userListSearch:focus {
+    box-shadow: 0 0 0 2px #3b82f6; /* Blue outline on focus */
+  }
+  
+  .userList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Space between users */
+    list-style: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+  }
+  
+  .userListItem {
+    padding: 0.75rem;
+    background-color: #333; /* Darker list item background */
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .userListUserInfo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .userListAvatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+    border: 1px solid #555; /* Slightly lighter border */
+  }
+  
+  .userListName {
+    font-weight: 500;
+    color: white; /* White text */
+  }
+  
+  .userListUsername {
+    font-size: 0.875rem;
+    color: #aaa; /* Lighter gray text */
+  }
+  
+  .userListButton {
+    background-color: #3b82f6; /* Blue button */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    outline: none; /* Remove default outline */
+    box-shadow: 0 0 0 2px #555; /* Subtle outline on focus */
+  }
+  
+  .userListButton:hover {
+    background-color: #2563eb; /* Darker blue on hover */
+  }
+  
+  .userListButton:focus {
+    box-shadow: 0 0 0 2px #3b82f6; /* Blue outline on focus */
+  }
+  
+  .userListNoUsers {
+    color: white; /* White text for "no users" message */
+    text-align: center; /* Center the text */
+  }
