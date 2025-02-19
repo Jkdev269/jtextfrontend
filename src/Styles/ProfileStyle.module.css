@@ -1,7 +1,7 @@
 /* Profile Container */
 .profileContainer {
   padding: 2rem;
-  background-color: #1a1a1a; /* Dark background */
+  background-color: #020101; /* Dark background */
   color: white;
   border-radius: 0.75rem;
   width: 100%;
@@ -13,7 +13,7 @@
 
 /* Profile Card */
 .profileCard {
-  background-color: #2a2a2a;
+  background-color: #000000;
   padding: 1.5rem;
   border-radius: 0.75rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);

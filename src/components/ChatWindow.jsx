@@ -1,14 +1,28 @@
-import { useState, useEffect, useRef, useContext} from "react";
+import { useState, useEffect, useRef, useContext, useCallback } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import styles from "../Styles/ChatWindowStyle.module.css";
 import { AuthContext } from "../context/AuthContext";
 import { BsTelephone, BsCameraVideo } from "react-icons/bs";
 import { IoSend } from 'react-icons/io5';
-import { BsEmojiSmile, BsImage } from 'react-icons/bs'; // Import emoji and image icons
-import Picker from 'emoji-picker-react'; // Import emoji picker
+import { BsEmojiSmile, BsImage } from 'react-icons/bs';
+import Picker from 'emoji-picker-react';
 
 const socket = io("http://localhost:8081", { withCredentials: true });
+
+// Debounce utility function
+function debounce(func, wait) {
+    let timeout;
+    const debouncedFunction = function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+    debouncedFunction.cancel = function() {
+        clearTimeout(timeout);
+    };
+    return debouncedFunction;
+}
 
 const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     const { user: loggedInUser } = useContext(AuthContext);
@@ -16,16 +30,72 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     const [messages, setMessages] = useState([]);
     const messageListRef = useRef(null);
     const [loadingMessages, setLoadingMessages] = useState(true);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false); // State for emoji picker
-    //const [chosenEmoji, setChosenEmoji] = useState(null); // State for chosen emoji
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const messageInputRef = useRef(null);
+    const [onlineUsers, setOnlineUsers] = useState([]);
+    const [messageStatus, setMessageStatus] = useState({});
+    const seenMessagesRef = useRef(new Set());
 
+    const isElementVisible = useCallback((el) => {
+        if (!messageListRef.current) return false;
+        const rect = el.getBoundingClientRect();
+        const containerRect = messageListRef.current.getBoundingClientRect();
+        return (
+            rect.top >= containerRect.top &&
+            rect.bottom <= containerRect.bottom
+        );
+    }, []);
 
+    const markMessageAsSeen = useCallback(async (messageId) => {
+        if (!loggedInUser?._id || seenMessagesRef.current.has(messageId)) return;
+
+        try {
+            const response = await axios.put(
+                `http://localhost:8081/api/private-messages/seen/${messageId}`,
+                { userId: loggedInUser._id },
+                { withCredentials: true }
+            );
+
+            if (response.status === 200) {
+                seenMessagesRef.current.add(messageId);
+                setMessages(prevMessages => 
+                    prevMessages.map(msg => 
+                        msg._id === messageId ? { ...msg, status: 'seen' } : msg
+                    )
+                );
+                socket.emit("messageSeen", messageId, loggedInUser._id);
+            }
+        } catch (error) {
+            console.error("❌ Error marking message as seen:", error);
+            seenMessagesRef.current.delete(messageId);
+        }
+    }, [loggedInUser]);
+
+    const markVisibleMessagesSeen = useCallback(() => {
+        if (!messageListRef.current || !loggedInUser) return;
+
+        const receivedMessages = messageListRef.current.querySelectorAll(`.${styles.received}`);
+        receivedMessages.forEach(messageEl => {
+            const messageId = messageEl.dataset.messageId;
+            if (!messageId || seenMessagesRef.current.has(messageId)) return;
+            
+            if (isElementVisible(messageEl)) {
+                markMessageAsSeen(messageId);
+            }
+        });
+    }, [loggedInUser, isElementVisible, markMessageAsSeen]);
+
+    const debouncedScrollHandler = useCallback(
+        debounce(() => markVisibleMessagesSeen(), 100),
+        [markVisibleMessagesSeen]
+    );
+
+    // Fetch messages effect
     useEffect(() => {
         const fetchMessages = async () => {
             if (!selectedFriend || !loggedInUser) {
                 setMessages([]);
-                setLoadingMessages(false); // Set loading to false even if no friend/user
+                setLoadingMessages(false);
                 return;
             }
 
@@ -36,6 +106,9 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                     { withCredentials: true }
                 );
                 setMessages(response.data);
+                
+                // Clear seen messages when fetching new messages
+                seenMessagesRef.current.clear();
             } catch (error) {
                 console.error("❌ Error fetching messages:", error);
             } finally {
@@ -49,62 +122,117 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
         fetchMessages();
 
         return () => {
-            socket.emit("leaveRoom", loggedInUser._id);
-            socket.emit("leaveRoom", selectedFriend._id);
+            if (loggedInUser && selectedFriend) {
+                socket.emit("leaveRoom", loggedInUser._id);
+                socket.emit("leaveRoom", selectedFriend._id);
+            }
         };
     }, [selectedFriend, loggedInUser]);
 
-    
-
+    // Scroll and message seen effect
     useEffect(() => {
-        if (messageListRef.current) {
-            messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+        const messageContainer = messageListRef.current;
+        if (messageContainer) {
+            messageContainer.addEventListener('scroll', debouncedScrollHandler);
+            // Only check visible messages after messages are loaded
+            if (!loadingMessages) {
+                markVisibleMessagesSeen();
+            }
         }
-    }, [messages]);
+
+        return () => {
+            if (messageContainer) {
+                messageContainer.removeEventListener('scroll', debouncedScrollHandler);
+            }
+            debouncedScrollHandler.cancel();
+        };
+    }, [debouncedScrollHandler, markVisibleMessagesSeen, loadingMessages]);
+
+    // Online status effect
+    useEffect(() => {
+        socket.on("userOnline", (userId) => {
+            setOnlineUsers(prev => [...prev, userId]);
+        });
+
+        socket.on("userOffline", (userId) => {
+            setOnlineUsers(prev => prev.filter(id => id !== userId));
+        });
+
+        return () => {
+            socket.off("userOnline");
+            socket.off("userOffline");
+        };
+    }, []);
+
+    // Message socket events effect
+    useEffect(() => {
+        const handleReceiveMessage = (newMessage) => {
+            if (!newMessage?.text?.trim()) return;
+            
+            setMessages(prev => [...prev, newMessage]);
+            
+            if (newMessage.receiver === loggedInUser?._id) {
+                markMessageAsSeen(newMessage._id);
+            }
+        };
+
+        const handleMessageSeen = (messageId, senderId) => {
+            if (senderId === selectedFriend?._id) {
+                setMessages(prevMessages => prevMessages.map(msg => 
+                    msg._id === messageId ? { ...msg, status: 'seen' } : msg
+                ));
+                setMessageStatus(prev => ({
+                    ...prev,
+                    [messageId]: 'seen'
+                }));
+            }
+        };
+
+        socket.on("receiveMessage", handleReceiveMessage);
+        socket.on("messageSeen", handleMessageSeen);
+
+        return () => {
+            socket.off("receiveMessage", handleReceiveMessage);
+            socket.off("messageSeen", handleMessageSeen);
+        };
+    }, [selectedFriend, loggedInUser, markMessageAsSeen]);
+
+    // Clear seen messages when changing friends
+    useEffect(() => {
+        seenMessagesRef.current.clear();
+    }, [selectedFriend]);
 
     const sendMessage = async () => {
-        if (!message.trim()) return;
-
-        if (!selectedFriend?._id || !loggedInUser?._id || !selectedFriend?.username || !loggedInUser?.username) {
-            console.error("❌ Missing user data:", { selectedFriend, loggedInUser });
-            return;
-        }
+        if (!message.trim() || !selectedFriend?._id || !loggedInUser?._id) return;
 
         try {
-            const currentMessage = message; 
             const response = await axios.post(
                 "http://localhost:8081/api/private-messages/send",
                 {
                     fromUsername: loggedInUser.username,
                     toUsername: selectedFriend.username,
-                    text: currentMessage.trim(),
+                    text: message.trim(),
                 },
                 { withCredentials: true }
             );
 
-            setMessage(""); // Clear input field immediately
+            const newMessage = response.data;
+            setMessageStatus(prev => ({ ...prev, [newMessage._id]: "sent" }));
+            setMessage("");
+            socket.emit("sendMessage", newMessage);
 
-            // The rest of the handling is now done through Socket.io
-            // Remove optimistic update and state manipulation here
-            console.log("Message sent successfully (Axios)", response.data);
             if (messageInputRef.current) {
-                messageInputRef.current.focus(); // Refocus on the input field
+                messageInputRef.current.focus();
             }
-
         } catch (error) {
             console.error("❌ Error sending message:", error);
-            if (error.response) {
-                console.error("Server responded with:", error.response.data);
-            }
         }
     };
-    const handleEmojiClick = (emojiObject) => {
-        setMessage(prevMessage => prevMessage + emojiObject.emoji);
-        setShowEmojiPicker(false);
 
-        if (messageInputRef.current) {
-            messageInputRef.current.focus(); // Refocus on the input field
-        }
+    const handleEmojiClick = (emojiObject) => {
+        setMessage(prev => prev + emojiObject.emoji);
+        setShowEmojiPicker(false);
+        messageInputRef.current?.focus();
     };
 
     const handleImageUpload = (event) => {
@@ -112,153 +240,120 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                // Here you would typically send the image data to your backend
-                // For this example, we'll just log it to the console
                 console.log("Image data:", reader.result);
-                // In a real application, you would include this image data in your
-                // message payload when sending it to the server.
-            }
-            reader.readAsDataURL(file); // Or readAsBinaryString if needed
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    useEffect(() => {
-        const handleReceiveMessage = (newMessage) => {
-            if (!newMessage?.text?.trim()) {
-                console.warn("⚠️ Received an empty message:", newMessage);
-                return;
-            }
-            console.log("📩 Received new message:", newMessage);
-            setMessages((prev) => [...prev, newMessage]); // Only update state here
-        };
+    const getMessageStatus = (message) => {
+        if (message.sender !== loggedInUser?._id) return null;
+        return message.status || messageStatus[message._id] || "sent";
+    };
 
-        socket.on("receiveMessage", handleReceiveMessage);
-
-        return () => {
-            socket.off("receiveMessage", handleReceiveMessage);
-        };
-    }, []);
+    const isUserOnline = useCallback((userId) => 
+        onlineUsers.includes(userId), [onlineUsers]
+    );
 
     return (
         <div className={styles.chatContainer}>
-            {/* ... (rest of your JSX - header, message area, input) */}
-              <div className={styles.chatHeader}>
+            <div className={styles.chatHeader}>
+                <span onClick={() => setSelectedFriend(null)} className={styles.backButton}>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={styles.backIcon}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7" />
+                    </svg>
+                </span>
 
-                <span onClick={() => setSelectedFriend(null)} className={styles.backButton}>
+                <h2 className={styles.chatFriendName}>
+                    {selectedFriend?.username}
+                    {isUserOnline(selectedFriend?._id) && 
+                        <span className={styles.onlineStatus}> (Online)</span>
+                    }
+                </h2>
 
-                    <svg
-
-                        xmlns="http://www.w3.org/2000/svg"
-
-                        className={styles.backIcon}
-
-                        fill="none"
-
-                        viewBox="0 0 24 24"
-
-                        stroke="currentColor"
-
-                    >
-
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7" />
-
-                    </svg>
-
-                </span>
-
-                <h2 className={styles.chatFriendName}>{selectedFriend?.username}</h2>
-<div className={styles.callIcons}> {/* Add a container for styling */}
-                    <span className={styles.callButton} onClick={() => handleCall()}> {/* Call button */}
-                        <BsTelephone /> {/* Use a call icon */}
+                <div className={styles.callIcons}>
+                    <span className={styles.callButton}>
+                        <BsTelephone />
                     </span>
-                    <span className={styles.videoCallButton} onClick={() => handleVideoCall()}> {/* Video call button */}
-                        <BsCameraVideo /> {/* Use a video call icon */}
+                    <span className={styles.videoCallButton}>
+                        <BsCameraVideo />
                     </span>
                 </div>
+            </div>
 
-            </div>
+            <div className={styles.messageArea} ref={messageListRef}>
+                {loadingMessages ? (
+                    <span className={styles.loader}></span>
+                ) : messages.length === 0 ? (
+                    <p className={styles.messagePlaceholder}>
+                        Start your conversation with {selectedFriend?.username}...
+                    </p>
+                ) : (
+                    messages.map((msg, index) => (
+                        <div
+                            key={msg._id || index}
+                            className={`${styles.message} ${msg.sender === loggedInUser?._id ? styles.sent : styles.received}`}
+                            data-message-id={msg._id}
+                        >
+                            <span>{msg.text}</span>
+                            <span className={styles.messageStatus}>
+                                {getMessageStatus(msg) === "sent" ? (
+                                    <span className={styles.singleTick}>✓</span>
+                                ) : getMessageStatus(msg) === "seen" ? (
+                                    <span className={styles.doubleTick}>✓✓</span>
+                                ) : null}
+                            </span>
+                        </div>
+                    ))
+                )}
+            </div>
 
-
-
-            {/* 🟢 Messages Section */}
-
-            <div className={styles.messageArea} ref={messageListRef}>
-
-                {loadingMessages ? (
-
-                    <p className={styles.messagePlaceholder}>Loading messages...</p>
-
-                ) : messages.length === 0 ? (
-
-                    <p className={styles.messagePlaceholder}>
-
-                        Start your conversation with {selectedFriend?.username}...
-
-                    </p>
-
-                ) : (
-
-                    messages.map((msg, index) => (
-
-                        <div
-
-                            key={msg._id || index}
-
-                            className={`${styles.message} ${
-
-                                msg.sender === loggedInUser?._id ? styles.sent : styles.received
-
-                            }`}
-
-                        >
-
-                            {msg.text?.trim() ? <p>{msg.text}</p> : <p>🚨 Error: Message is empty!</p>}
-
-                        </div>
-
-                    ))
-
-                )}
-
-            </div>
-
-
-<div className={styles.chatInputArea}>
+            <div className={styles.chatInputArea}>
                 <input
                     type="text"
                     placeholder="Type a message..."
                     className={styles.chatInput}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    
-                    ref={messageInputRef} 
+                    ref={messageInputRef}
                 />
 
-                <span className={styles.emojiButton} onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+                <span 
+                    className={styles.emojiButton} 
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
                     <BsEmojiSmile />
                 </span>
 
-                <label htmlFor="imageUpload" className={styles.imageUploadButton}> {/* Make label act as button */}
+                <label htmlFor="imageUpload" className={styles.imageUploadButton}>
                     <BsImage />
                 </label>
-                <input type="file" id="imageUpload" style={{ display: 'none' }} onChange={handleImageUpload} />
+                <input 
+                    type="file" 
+                    id="imageUpload" 
+                    style={{ display: 'none' }} 
+                    onChange={handleImageUpload}
+                />
 
                 <span
                     className={styles.sendButton}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        sendMessage();
-                    }}
-                    disabled={!selectedFriend?._id || !loggedInUser?._id || !selectedFriend?.username || !loggedInUser?.username}
+                    onClick={sendMessage}
+                    disabled={!selectedFriend?._id || !loggedInUser?._id}
                 >
                     <IoSend />
                 </span>
 
                 {showEmojiPicker && (
-    <div style={{ position: 'absolute', bottom: '50px', left: 0 }}>
-        <Picker onEmojiClick={handleEmojiClick} />
-    </div>
-)}
+                    <div style={{ position: 'absolute', bottom: '50px', left: 0 }}>
+                        <Picker onEmojiClick={handleEmojiClick} />
+                    </div>
+                )}
             </div>
         </div>
     );
