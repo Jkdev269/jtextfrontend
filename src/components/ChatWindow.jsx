@@ -6,6 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { BsTelephone, BsCameraVideo } from "react-icons/bs";
 import { IoSend } from 'react-icons/io5';
 import { BsEmojiSmile, BsImage } from 'react-icons/bs';
+import { IoMdClose } from 'react-icons/io';
 import Picker from 'emoji-picker-react';
 
 const socket = io("http://localhost:8081", { withCredentials: true });
@@ -28,10 +29,13 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     const { user: loggedInUser } = useContext(AuthContext);
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState([]);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const messageListRef = useRef(null);
     const [loadingMessages, setLoadingMessages] = useState(true);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const messageInputRef = useRef(null);
+    const fileInputRef = useRef(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [messageStatus, setMessageStatus] = useState({});
     const seenMessagesRef = useRef(new Set());
@@ -105,22 +109,34 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                     `http://localhost:8081/api/private-messages/${selectedFriend.username}/${loggedInUser.username}`,
                     { withCredentials: true }
                 );
-                setMessages(response.data);
                 
-                // Clear seen messages when fetching new messages
+                // Process and set messages
+                const processedMessages = response.data.map(msg => ({
+                    ...msg,
+                    imageUrl: msg.imageUrl ? msg.imageUrl : null
+                }));
+                
+                setMessages(processedMessages);
                 seenMessagesRef.current.clear();
+                
+                // Join the room after fetching messages
+                if (loggedInUser._id && selectedFriend._id) {
+                    socket.emit("joinRoom", loggedInUser._id);
+                    socket.emit("joinRoom", selectedFriend._id);
+                }
+                
+                // Scroll to bottom after messages are loaded
+                setTimeout(scrollToBottom, 0);
             } catch (error) {
                 console.error("❌ Error fetching messages:", error);
             } finally {
                 setLoadingMessages(false);
             }
-
-            socket.emit("joinRoom", loggedInUser._id);
-            socket.emit("joinRoom", selectedFriend._id);
         };
 
         fetchMessages();
 
+        // Cleanup function
         return () => {
             if (loggedInUser && selectedFriend) {
                 socket.emit("leaveRoom", loggedInUser._id);
@@ -129,6 +145,13 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
         };
     }, [selectedFriend, loggedInUser]);
 
+
+    const scrollToBottom = () => {
+        if (messageListRef.current) {
+            messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+        }
+    };
+
     // Scroll and message seen effect
     useEffect(() => {
         const messageContainer = messageListRef.current;
@@ -136,6 +159,7 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
             messageContainer.addEventListener('scroll', debouncedScrollHandler);
             // Only check visible messages after messages are loaded
             if (!loadingMessages) {
+                scrollToBottom();
                 markVisibleMessagesSeen();
             }
         }
@@ -165,12 +189,22 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     }, []);
 
     // Message socket events effect
+ 
+    // Message socket events effect - Updated version
     useEffect(() => {
         const handleReceiveMessage = (newMessage) => {
-            if (!newMessage?.text?.trim()) return;
+            setMessages(prev => {
+                // Check if message already exists to prevent duplicates
+                const messageExists = prev.some(msg => msg._id === newMessage._id);
+                if (messageExists) return prev;
+                
+                return [...prev, newMessage];
+            });
             
-            setMessages(prev => [...prev, newMessage]);
+            // Scroll to bottom when new message arrives
+            setTimeout(scrollToBottom, 0);
             
+            // Mark message as seen if it's received
             if (newMessage.receiver === loggedInUser?._id) {
                 markMessageAsSeen(newMessage._id);
             }
@@ -178,19 +212,19 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
         const handleMessageSeen = (messageId, senderId) => {
             if (senderId === selectedFriend?._id) {
-                setMessages(prevMessages => prevMessages.map(msg => 
-                    msg._id === messageId ? { ...msg, status: 'seen' } : msg
-                ));
-                setMessageStatus(prev => ({
-                    ...prev,
-                    [messageId]: 'seen'
-                }));
+                setMessages(prevMessages => 
+                    prevMessages.map(msg => 
+                        msg._id === messageId ? { ...msg, status: 'seen' } : msg
+                    )
+                );
             }
         };
 
+        // Set up socket event listeners
         socket.on("receiveMessage", handleReceiveMessage);
         socket.on("messageSeen", handleMessageSeen);
 
+        // Clean up socket event listeners
         return () => {
             socket.off("receiveMessage", handleReceiveMessage);
             socket.off("messageSeen", handleMessageSeen);
@@ -203,23 +237,48 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     }, [selectedFriend]);
 
     const sendMessage = async () => {
-        if (!message.trim() || !selectedFriend?._id || !loggedInUser?._id) return;
+        if (!selectedFriend?._id || !loggedInUser?._id) return;
+        const trimmedText = message.trim();
+        // Don't send if there's no content at all
+        if (!trimmedText && !selectedImage) return;
 
         try {
+            const formData = new FormData();
+            formData.append('fromUsername', loggedInUser.username);
+            formData.append('toUsername', selectedFriend.username);
+            // const trimmedText = message.trim();
+        if (trimmedText) {
+            formData.append('text', trimmedText);
+        } 
+            
+            if (selectedImage) {
+                formData.append('image', selectedImage);
+            }
+            
             const response = await axios.post(
                 "http://localhost:8081/api/private-messages/send",
-                {
-                    fromUsername: loggedInUser.username,
-                    toUsername: selectedFriend.username,
-                    text: message.trim(),
-                },
-                { withCredentials: true }
+                formData,
+                { withCredentials: true, headers: { "Content-Type": "multipart/form-data" }}
             );
 
             const newMessage = response.data;
+            
+            // Update messages state immediately
+            setMessages(prev => [...prev, newMessage]);
+            
+            // Update message status
             setMessageStatus(prev => ({ ...prev, [newMessage._id]: "sent" }));
+            
+            // Clear input fields
             setMessage("");
+            setSelectedImage(null);
+            setImagePreview(null);
+            
+            // Emit socket event
             socket.emit("sendMessage", newMessage);
+            
+            // Scroll to bottom
+            setTimeout(scrollToBottom, 0);
 
             if (messageInputRef.current) {
                 messageInputRef.current.focus();
@@ -237,14 +296,25 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
+        console.log("📷 Selected File:", file);
         if (file) {
+            setSelectedImage(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                console.log("Image data:", reader.result);
+                setImagePreview(reader.result);
             };
             reader.readAsDataURL(file);
         }
     };
+
+    const removeSelectedImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
 
     const getMessageStatus = (message) => {
         if (message.sender !== loggedInUser?._id) return null;
@@ -253,7 +323,63 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
     const isUserOnline = useCallback((userId) => 
         onlineUsers.includes(userId), [onlineUsers]
+
     );
+    const [selectedImageModal, setSelectedImageModal] = useState(null);
+    const MessageContent = ({ msg }) => (
+        <div className={styles.messageContent}>
+            {msg.imageUrl && (
+                <img 
+                    src={`http://localhost:8081${msg.imageUrl}`} 
+                    alt="Message attachment" 
+                    className={styles.messageImage}
+                    onClick={() => setSelectedImageModal(`http://localhost:8081${msg.imageUrl}`)}
+                    style={{ cursor: 'pointer' }}
+                />
+            )}
+            {msg.text && <span className={styles.messageText}>{msg.text}</span>}
+            <span className={styles.messageStatus}>
+                {getMessageStatus(msg) === "sent" ? (
+                    <span className={styles.singleTick}>✓</span>
+                ) : getMessageStatus(msg) === "seen" ? (
+                    <span className={styles.doubleTick}>✓✓</span>
+                ) : null}
+            </span>
+        </div>
+    );
+    const ImageModal = () => {
+        if (!selectedImageModal) return null;
+        
+        return (
+            <div 
+                className={styles.imageModal}
+                onClick={() => setSelectedImageModal(null)}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}
+            >
+                <img 
+                    src={selectedImageModal}
+                    alt="Full size"
+                    style={{
+                        maxWidth: '90%',
+                        maxHeight: '90%',
+                        objectFit: 'contain'
+                    }}
+                />
+            </div>
+        );
+    };
+
 
     return (
         <div className={styles.chatContainer}>
@@ -287,7 +413,7 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                 </div>
             </div>
 
-            <div className={styles.messageArea} ref={messageListRef}>
+                       <div className={styles.messageArea} ref={messageListRef}>
                 {loadingMessages ? (
                     <span className={styles.loader}></span>
                 ) : messages.length === 0 ? (
@@ -301,20 +427,30 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                             className={`${styles.message} ${msg.sender === loggedInUser?._id ? styles.sent : styles.received}`}
                             data-message-id={msg._id}
                         >
-                            <span>{msg.text}</span>
-                            <span className={styles.messageStatus}>
-                                {getMessageStatus(msg) === "sent" ? (
-                                    <span className={styles.singleTick}>✓</span>
-                                ) : getMessageStatus(msg) === "seen" ? (
-                                    <span className={styles.doubleTick}>✓✓</span>
-                                ) : null}
-                            </span>
+                            <MessageContent msg={msg} />
                         </div>
                     ))
                 )}
             </div>
+            <ImageModal /> 
 
             <div className={styles.chatInputArea}>
+                {imagePreview && (
+                    <div className={styles.imagePreviewContainer}>
+                        <img 
+                            src={imagePreview} 
+                            alt="Preview" 
+                            className={styles.imagePreview} 
+                        />
+                        <button 
+                            onClick={removeSelectedImage}
+                            className={styles.removeImageButton}
+                        >
+                            <IoMdClose />
+                        </button>
+                    </div>
+                )}
+
                 <input
                     type="text"
                     placeholder="Type a message..."
@@ -335,8 +471,10 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                     <BsImage />
                 </label>
                 <input 
-                    type="file" 
+                    type="file"
+                    ref={fileInputRef}
                     id="imageUpload" 
+                    accept="image/*"
                     style={{ display: 'none' }} 
                     onChange={handleImageUpload}
                 />
@@ -355,6 +493,7 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                     </div>
                 )}
             </div>
+
         </div>
     );
 };
