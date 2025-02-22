@@ -4,10 +4,8 @@ import UserList from "../components/UserList";
 import FriendRequests from "../components/FriendRequests";
 import Profile from "../components/Profile";
 import ChatWindow from "../components/ChatWindow";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import styles from "../Styles/HomeStyle.module.css"
 
 const Home = () => {
   const { user } = useContext(AuthContext);
@@ -22,16 +20,18 @@ const Home = () => {
   }, [user, navigate]);
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <div className="text-white text-center mt-10">Loading...</div>;
   }
 
   return (
-    <div className={styles.homeContainer}>
-      <div className={styles.sidebarArea}>
+    <div className="flex h-screen bg-black text-white">
+      {/* Sidebar Section */}
+      <div className="border-r border-gray-700 flex flex-col justify-between">
         <Sidebar setActiveTab={setActiveTab} setSelectedFriend={setSelectedFriend} />
       </div>
 
-      <div className={styles.contentArea}>
+      {/* Content Section */}
+      <div className="flex-1">
         {selectedFriend ? (
           <ChatWindow selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
         ) : activeTab === "users" ? (

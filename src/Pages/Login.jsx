@@ -1,11 +1,11 @@
-import React, { useState, useContext} from "react";
-import styles from "../Styles/LoginStyle.module.css";
+import React, { useState, useContext } from "react";
 import { loginUser } from "../api/api"; // Ensure this handles cookie-based auth
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const Login = ({ onClose, onSignUp }) => {
-  const {user,setUser } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [message, setMessage] = useState("");
@@ -21,7 +21,7 @@ const Login = ({ onClose, onSignUp }) => {
       setMessage("Please enter your email.");
     } else {
       setShowPasswordField(true);
-      setMessage(""); // Clear any previous messages
+      setMessage("");
     }
   };
 
@@ -29,140 +29,145 @@ const Login = ({ onClose, onSignUp }) => {
     e.preventDefault();
     try {
       const response = await loginUser(formData);
-      console.log("Login Response:", response);
-  
-      if (response.user) { // Correct condition: check for response.user
+      if (response.user) {
         setUser(response.user);
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
       } else {
-        console.error("Login failed:", response.message);
         setMessage(response.message);
       }
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Login failed. Try again.');
+      setMessage(error.response?.data?.message || "Login failed. Try again.");
     }
   };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const data = await loginUser(formData);
-  //     if(data.success){
-  //       setMessage('Login successful! Redirecting...');
-  //       navigate('/home'); // Replace with your app's dashboard route
-  //     }
-  //     else{
-  //       alert(data.message);
-  //     }
-    
-  //   } catch (error) {
-  //     setMessage(error.response?.data?.message || 'Login failed. Try again.');
-  //   }
-  // };
-  
-
-  // useEffect(() => {
-  //   if (user) {
-  //     console.log("User state updated, navigating to home...");
-  //     navigate("/home");
-  //   }
-  // }, [user]);
-  
 
   const handleForgotPassword = () => {
     navigate("/forgot-password");
   };
 
   return (
-    <div className={styles["popup-overlay"]}>
-      <div className={styles["popup"]}>
-        <span className={styles["close-btn"]} onClick={onClose}>
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 z-50 p-4">
+      <div className="bg-black p-6 rounded-lg shadow-lg w-full max-w-md flex flex-col items-center relative h-auto sm:h-4/5">
+        <button
+          className="absolute top-3 left-4 text-white text-2xl font-bold hover:text-red-500"
+          onClick={onClose}
+        >
           &times;
-        </span>
-        <div className={styles["logo-popup"]}>jK</div>
-        <h3>Sign in to JK</h3>
+        </button>
+        <div className="flex justify-center">
+          <img src={logo} alt="JK Logo" className="w-12 h-12 object-contain" />
+        </div>
+
+        <h3 className="text-xl sm:text-2xl text-white mb-4">Sign in to JText</h3>
 
         {!showPasswordField && (
           <>
-            <button className={styles["google"]}>
+            <button className="bg-white text-black w-full max-w-xs py-3 rounded-full flex items-center justify-center gap-2 mb-3">
               <img
-                className={styles["google-icon"]}
+                className="w-5 h-5"
                 src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png"
                 alt="Google icon"
               />
               Sign in with Google
             </button>
-            <button className={styles["github"]}>
+            <button className="bg-gray-800 text-white w-full max-w-xs py-3 rounded-full flex items-center justify-center gap-2">
               <img
-                className={styles["github-icon"]}
+                className="w-5 h-5"
                 src="https://cdn-icons-png.flaticon.com/512/25/25231.png"
                 alt="GitHub icon"
               />
               Sign in with GitHub
             </button>
-
-            <div className={styles["Popup_divider-container"]}>
-              <hr className={styles["Popup_divider"]} />
-              <span className={styles["Popup_divider-text"]}>or</span>
-              <hr className={styles["Popup_divider"]} />
+            <div className="flex items-center w-4/5 my-4">
+              <hr className="flex-1 border-gray-600" />
+              <span className="mx-2 text-gray-400">or</span>
+              <hr className="flex-1 border-gray-600" />
             </div>
           </>
         )}
 
-        <form onSubmit={showPasswordField ? handleSubmit : handleNext} className={styles["popup-form"]}>
-          {/* Email Input */}
-          <div className={styles["input-container"]}>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder=""
-              disabled={showPasswordField}
-            />
-            <label htmlFor="email">Email</label>
-          </div>
+        <form
+          onSubmit={showPasswordField ? handleSubmit : handleNext}
+          className="w-full max-w-xs flex flex-col gap-6"
+        >
+<div className="relative">
+  <input
+    type="email"
+    id="email"
+    name="email"
+    value={formData.email}
+    onChange={handleChange}
+    required
+    placeholder=" "
+    className="peer w-full text-white bg-transparent border border-gray-400 rounded-md p-2 outline-none focus:border-blue-500 disabled:opacity-70"
+    disabled={showPasswordField} 
+  />
+  <label
+    htmlFor="email"
+    className="absolute left-2 top-2 text-gray-400 transition-all 
+      peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm 
+      peer-focus:top-0 peer-focus:text-xs peer-focus:text-blue-500 
+      peer-disabled:top-0 peer-disabled:text-xs peer-disabled:text-gray-400"
+  >
+    Email
+  </label>
+</div>
 
-          {/* Password Input */}
+
           {showPasswordField && (
-            <div className={styles["input-container"]}>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                placeholder=""
-              />
-              <label htmlFor="password">Password</label>
-            </div>
+           <div className="relative">
+           <input
+             type="password"
+             id="password"
+             name="password"
+             value={formData.password}
+             onChange={handleChange}
+             required
+             placeholder=" "
+             className="peer w-full text-white bg-transparent border border-gray-400 rounded-md p-2 outline-none focus:border-blue-500"
+           />
+           <label
+             htmlFor="password"
+             className="absolute left-2 top-2 text-gray-400 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs peer-focus:text-blue-500"
+           >
+             Password
+           </label>
+         </div>
+         
           )}
-
-          {/* Buttons */}
-          <div className={styles["popup-buttons"]}>
-            <button type="submit">{showPasswordField ? "Login" : "Next"}</button>
+          <div className="flex justify-center mt-4">
+            <button
+              type="submit"
+              className="bg-white text-black w-full max-w-xs py-3 rounded-full font-bold"
+            >
+              {showPasswordField ? "Login" : "Next"}
+            </button>
           </div>
         </form>
 
         {showPasswordField && (
-          <div className={styles["popup-forgotbuttons"]}>
-            <button type="button" onClick={handleForgotPassword}>
+          <div className="mt-4">
+            <button
+              className="text-white bg-black border border-gray-500 px-4 py-2 rounded-md"
+              onClick={handleForgotPassword}
+            >
               Forgot password?
             </button>
           </div>
         )}
 
-        {message && <p className={styles["message"]}>{message}</p>}
+        {message && <p className="text-red-500 mt-2 text-center">{message}</p>}
 
         {!showPasswordField && (
           <>
-            <h4>Don't have an account? </h4>
-            <button className={styles["Popup_signin"]} onClick={onSignUp}>
-              Sign up
-            </button>
+            <h4 className="text-white mt-4 text-center">Don't have an account?</h4>
+            <div className="flex justify-center mt-2">
+              <button
+                className="text-blue-500 border border-gray-500 bg-black px-4 py-2 rounded-md"
+                onClick={onSignUp}
+              >
+                Sign up
+              </button>
+            </div>
           </>
         )}
       </div>

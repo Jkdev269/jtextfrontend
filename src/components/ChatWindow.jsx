@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useContext, useCallback } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
-import styles from "../Styles/ChatWindowStyle.module.css";
 import { AuthContext } from "../context/AuthContext";
 import { BsTelephone, BsCameraVideo } from "react-icons/bs";
 import { IoSend } from 'react-icons/io5';
@@ -77,12 +76,12 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
     const markVisibleMessagesSeen = useCallback(() => {
         if (!messageListRef.current || !loggedInUser) return;
-
-        const receivedMessages = messageListRef.current.querySelectorAll(`.${styles.received}`);
+    
+        const receivedMessages = messageListRef.current.querySelectorAll('.received-message'); // Correct selector
         receivedMessages.forEach(messageEl => {
             const messageId = messageEl.dataset.messageId;
             if (!messageId || seenMessagesRef.current.has(messageId)) return;
-            
+    
             if (isElementVisible(messageEl)) {
                 markMessageAsSeen(messageId);
             }
@@ -326,176 +325,209 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
     );
     const [selectedImageModal, setSelectedImageModal] = useState(null);
-    const MessageContent = ({ msg }) => (
-        <div className={styles.messageContent}>
-            {msg.imageUrl && (
-                <img 
-                    src={`http://localhost:8081${msg.imageUrl}`} 
-                    alt="Message attachment" 
-                    className={styles.messageImage}
-                    onClick={() => setSelectedImageModal(`http://localhost:8081${msg.imageUrl}`)}
-                    style={{ cursor: 'pointer' }}
-                />
-            )}
-            {msg.text && <span className={styles.messageText}>{msg.text}</span>}
-            <span className={styles.messageStatus}>
-                {getMessageStatus(msg) === "sent" ? (
-                    <span className={styles.singleTick}>✓</span>
-                ) : getMessageStatus(msg) === "seen" ? (
-                    <span className={styles.doubleTick}>✓✓</span>
-                ) : null}
-            </span>
-        </div>
-    );
-    const ImageModal = () => {
-        if (!selectedImageModal) return null;
-        
-        return (
-            <div 
-                className={styles.imageModal}
-                onClick={() => setSelectedImageModal(null)}
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000
-                }}
-            >
-                <img 
-                    src={selectedImageModal}
-                    alt="Full size"
-                    style={{
-                        maxWidth: '90%',
-                        maxHeight: '90%',
-                        objectFit: 'contain'
-                    }}
-                />
-            </div>
-        );
-    };
-
+ 
 
     return (
-        <div className={styles.chatContainer}>
-            <div className={styles.chatHeader}>
-                <span onClick={() => setSelectedFriend(null)} className={styles.backButton}>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className={styles.backIcon}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+        <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+            {/* Premium Header */}
+            <div className="flex items-center justify-between p-6 bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50">
+                <div className="flex items-center space-x-4">
+                    <button 
+                        onClick={() => setSelectedFriend(null)}
+                        className="p-2 rounded-full hover:bg-gray-800/50 transition-all duration-300"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7" />
-                    </svg>
-                </span>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 text-gray-300"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7" />
+                        </svg>
+                    </button>
+                    <div className="flex items-center space-x-3">
+                        <div className="relative">
+                            <img 
+                                src={selectedFriend?.profileImage || "/default-avatar.png"}
+                                alt="Profile"
+                                className="w-12 h-12 rounded-full border-2 border-gray-700"
+                            />
+                            {isUserOnline(selectedFriend?._id) && (
+                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
+                            )}
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white">
+                                {selectedFriend?.username}
+                            </h2>
+                            <p className="text-sm text-gray-400">
+                                {isUserOnline(selectedFriend?._id) ? 'Online' : 'Offline'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                <h2 className={styles.chatFriendName}>
-                    {selectedFriend?.username}
-                    {isUserOnline(selectedFriend?._id) && 
-                        <span className={styles.onlineStatus}> (Online)</span>
-                    }
-                </h2>
-
-                <div className={styles.callIcons}>
-                    <span className={styles.callButton}>
-                        <BsTelephone />
-                    </span>
-                    <span className={styles.videoCallButton}>
-                        <BsCameraVideo />
-                    </span>
+                <div className="flex items-center space-x-2">
+                    <button className="p-3 rounded-full hover:bg-gray-800/50 transition-all duration-300 group">
+                        <BsTelephone className="h-5 w-5 text-gray-400 group-hover:text-blue-400" />
+                    </button>
+                    <button className="p-3 rounded-full hover:bg-gray-800/50 transition-all duration-300 group">
+                        <BsCameraVideo className="h-5 w-5 text-gray-400 group-hover:text-blue-400" />
+                    </button>
                 </div>
             </div>
 
-                       <div className={styles.messageArea} ref={messageListRef}>
-                {loadingMessages ? (
-                    <span className={styles.loader}></span>
-                ) : messages.length === 0 ? (
-                    <p className={styles.messagePlaceholder}>
-                        Start your conversation with {selectedFriend?.username}...
-                    </p>
-                ) : (
-                    messages.map((msg, index) => (
-                        <div
-                            key={msg._id || index}
-                            className={`${styles.message} ${msg.sender === loggedInUser?._id ? styles.sent : styles.received}`}
-                            data-message-id={msg._id}
-                        >
-                            <MessageContent msg={msg} />
-                        </div>
-                    ))
-                )}
+            {/* Message Area with Enhanced Styling */}
+<div 
+    ref={messageListRef}
+    className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+>
+    {loadingMessages ? (
+        <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+    ) : messages.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full space-y-4">
+            <div className="w-16 h-16 rounded-full bg-gray-800/50 flex items-center justify-center">
+                <BsImage className="h-8 w-8 text-gray-500" />
             </div>
-            <ImageModal /> 
+            <p className="text-gray-500 text-lg">
+                Start chatting with {selectedFriend?.username}
+            </p>
+        </div>
+    ) : (
+        messages.map((msg, index) => (
+            <div
+                key={msg._id || index}
+                className={`flex ${msg.sender === loggedInUser?._id ? 'justify-end' : 'justify-start'}`}
+                data-message-id={msg._id}
+            >
+                <div className={`
+                    rounded-2xl p-4 shadow-lg w-max max-w-[70%] 
+                    ${msg.sender === loggedInUser?._id 
+                        ? 'bg-blue-600 rounded-br-none' 
+                        : 'bg-gray-800/80 rounded-bl-none'}
+                `}>
+                    {msg.imageUrl && (
+                        <div className="mb-2">
+                            <img 
+                                src={`http://localhost:8081${msg.imageUrl}`}
+                                alt="Message attachment"
+                                className="rounded-lg max-w-sm hover:opacity-90 transition-opacity cursor-pointer"
+                                onClick={() => setSelectedImageModal(`http://localhost:8081${msg.imageUrl}`)}
+                            />
+                        </div>
+                    )}
+                    {msg.text && (
+                        <p className="text-white/90">{msg.text}</p>
+                    )}
+                    <div className="flex items-center justify-end mt-2 space-x-2">
+                        <span className="text-xs text-white/60">
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {getMessageStatus(msg) && (
+                            <span className="text-xs text-white/60">
+                                {getMessageStatus(msg) === "seen" ? "✓✓" : "✓"}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        ))
+    )}
+</div>
 
-            <div className={styles.chatInputArea}>
+
+            {/* Enhanced Input Area */}
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border-t border-gray-700/50">
                 {imagePreview && (
-                    <div className={styles.imagePreviewContainer}>
+                    <div className="relative w-32 h-32 mb-4 group">
                         <img 
-                            src={imagePreview} 
-                            alt="Preview" 
-                            className={styles.imagePreview} 
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-lg border border-gray-700"
                         />
                         <button 
                             onClick={removeSelectedImage}
-                            className={styles.removeImageButton}
+                            className="absolute -top-2 -right-2 bg-red-500 p-2 rounded-full shadow-lg 
+                                     hover:bg-red-600 transition-colors duration-300"
                         >
-                            <IoMdClose />
+                            <IoMdClose className="h-4 w-4" />
                         </button>
                     </div>
                 )}
 
-                <input
-                    type="text"
-                    placeholder="Type a message..."
-                    className={styles.chatInput}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    ref={messageInputRef}
-                />
+                <div className="flex items-center space-x-4 bg-gray-800/50 rounded-full p-2">
+                    <button 
+                        className="p-3 rounded-full hover:bg-gray-700/50 transition-all duration-300"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    >
+                        <BsEmojiSmile className="h-6 w-6 text-gray-400 hover:text-blue-400" />
+                    </button>
 
-                <span 
-                    className={styles.emojiButton} 
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                >
-                    <BsEmojiSmile />
-                </span>
+                    <label className="p-3 rounded-full hover:bg-gray-700/50 transition-all duration-300 cursor-pointer">
+                        <BsImage className="h-6 w-6 text-gray-400 hover:text-blue-400" />
+                        <input 
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                        />
+                    </label>
 
-                <label htmlFor="imageUpload" className={styles.imageUploadButton}>
-                    <BsImage />
-                </label>
-                <input 
-                    type="file"
-                    ref={fileInputRef}
-                    id="imageUpload" 
-                    accept="image/*"
-                    style={{ display: 'none' }} 
-                    onChange={handleImageUpload}
-                />
+                    <input
+                        type="text"
+                        placeholder="Type a message..."
+                        className="flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        ref={messageInputRef}
+                    />
 
-                <span
-                    className={styles.sendButton}
-                    onClick={sendMessage}
-                    disabled={!selectedFriend?._id || !loggedInUser?._id}
-                >
-                    <IoSend />
-                </span>
+                    <button
+                        onClick={sendMessage}
+                        disabled={!selectedFriend?._id || !loggedInUser?._id}
+                        className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 transition-all duration-300 
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <IoSend className="h-6 w-6 text-white" />
+                    </button>
+                </div>
 
                 {showEmojiPicker && (
-                    <div style={{ position: 'absolute', bottom: '50px', left: 0 }}>
+                    <div className="absolute bottom-24 left-6">
                         <Picker onEmojiClick={handleEmojiClick} />
                     </div>
                 )}
             </div>
 
+            {/* Enhanced Image Modal */}
+            {selectedImageModal && (
+                <div 
+                    className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setSelectedImageModal(null)}
+                >
+                    <div className="relative max-w-4xl max-h-[80vh]">
+                        <img 
+                            src={selectedImageModal}
+                            alt="Full size"
+                            className="rounded-lg shadow-2xl"
+                        />
+                        <button 
+                            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 hover:bg-black/70 
+                                     transition-all duration-300"
+                            onClick={() => setSelectedImageModal(null)}
+                        >
+                            <IoMdClose className="h-6 w-6 text-white" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
+
 };
 
 export default ChatWindow;

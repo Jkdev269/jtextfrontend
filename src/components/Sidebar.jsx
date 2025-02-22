@@ -1,44 +1,8 @@
-// import { useState } from "react";
-// import { UsersIcon, UserIcon, BellIcon } from "@heroicons/react/outline";
-
-// const Sidebar = ({ setActiveTab }) => {
-//   return (
-//     <div className="w-1/4 h-screen bg-dark text-light p-4">
-//       <h2 className="text-xl font-bold">Chat</h2>
-
-//       {/* Navigation Buttons */}
-//       <button
-//         onClick={() => setActiveTab("users")}
-//         className="p-3 bg-primary flex items-center gap-2 rounded w-full my-2"
-//       >
-//         <UsersIcon className="w-1" /> All Users
-//       </button>
-
-//       <button
-//         onClick={() => setActiveTab("requests")}
-//         className="p-3 bg-primary flex items-center gap-2 rounded w-full my-2"
-//       >
-//         <BellIcon className="w-5" /> Friend Requests
-//       </button>
-
-//       <button
-//         onClick={() => setActiveTab("profile")}
-//         className="p-3 bg-primary flex items-center gap-2 rounded w-full my-2"
-//       >
-//         <UserIcon className="w-5" /> Profile
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default Sidebar;
-
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Search, UserCircle, Users, UserPlus } from "lucide-react";
 import axios from "axios";
-import styles from "../Styles/SidebarStyle.module.css"
 
-const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend,selectedFriend }) => {
+const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend }) => {
   const [friends, setFriends] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -61,68 +25,97 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend,selectedFriend }) 
   );
 
   return (
-    <div className={styles.sidebarContainer}>
-      <h2 className={styles.sidebarHeading}>Chats</h2>
+    <div className="w-full bg-black p-6 h-screen flex flex-col shadow-xl">
+      <div className="mb-8">
+        <h2 className="text-white text-2xl font-bold">Chats</h2>
+        <p className="text-gray-400 text-sm mt-1">Connect with your friends</p>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Search..."
-        className={styles.searchBox}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search friends..."
+          className="w-full pl-10 pr-4 py-3 bg-gray-800 text-white rounded-lg outline-none border border-gray-700 focus:border-blue-500 transition-colors"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-      <div className={styles.friendList}>
+      <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
         {filteredFriends.length === 0 ? (
-          <p className={styles.noFriends}>No friends found</p>
+          <div className="text-gray-400 text-center py-8">
+            <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>No friends found</p>
+          </div>
         ) : (
           filteredFriends.map((friend) => (
             <div
               key={friend.id}
-              className={styles.friendItem}
+              className={`flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-800 ${
+                selectedFriend?.id === friend.id ? 'bg-gray-800 border-l-4 border-blue-500' : ''
+              }`}
               onClick={() => setSelectedFriend(friend)}
             >
-              <img
-                src={friend.profileImage || "/default-avatar.png"}
-                alt="Profile"
-                className={styles.avatar}
-              />
-              <div className={styles.friendInfo}>
-                <p className={styles.friendName}>{friend.name}</p>
-                <p className={styles.friendUsername}>@{friend.username}</p>
+              <div className="relative">
+                <img
+                  src={friend.profileImage || "/default-avatar.png"}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
+                />
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
+              </div>
+              <div className="ml-4 flex-1">
+                <p className="text-white font-semibold">{friend.name}</p>
+                <p className="text-gray-400 text-sm">@{friend.username}</p>
               </div>
             </div>
           ))
         )}
       </div>
 
-      <div className={styles.navButtons}>
+      <div className="mt-6 space-y-3 pt-6 border-t border-gray-700">
         <button
-          className={`${styles.navButton} ${activeTab === "profile" ? styles.active : ""}`}
+          className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
+            activeTab === "profile"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+          }`}
           onClick={() => {
             setSelectedFriend(null);
             setActiveTab("profile");
           }}
         >
-          👤 Profile
+          <UserCircle className="w-5 h-5" />
+          Profile
         </button>
         <button
-          className={`${styles.navButton} ${activeTab === "requests" ? styles.active : ""}`}
+          className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
+            activeTab === "requests"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+          }`}
           onClick={() => {
             setSelectedFriend(null);
             setActiveTab("requests");
           }}
         >
-          🤝 Friend Requests
+          <UserPlus className="w-5 h-5" />
+          Friend Requests
         </button>
         <button
-          className={`${styles.navButton} ${activeTab === "users" ? styles.active : ""}`}
+          className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
+            activeTab === "users"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+          }`}
           onClick={() => {
             setSelectedFriend(null);
             setActiveTab("users");
           }}
         >
-          👥 All Users
+          <Users className="w-5 h-5" />
+          All Users
         </button>
       </div>
     </div>
@@ -130,7 +123,3 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend,selectedFriend }) 
 };
 
 export default Sidebar;
-
-
-
-
