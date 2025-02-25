@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Search, UserCircle, Users, UserPlus } from "lucide-react";
+import { useCallback } from "react";
+import { io } from "socket.io-client";
+
 import axios from "axios";
 
 const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend }) => {
   const [friends, setFriends] = useState([]);
   const [search, setSearch] = useState("");
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const socket = io("http://localhost:8081", { withCredentials: true });
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -23,6 +28,44 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend })
   const filteredFriends = friends.filter((friend) =>
     friend.username.toLowerCase().includes(search.toLowerCase())
   );
+   useEffect(() => {
+          const handleUserOnline = (userId) => {
+              console.log("User online:", userId);
+              setOnlineUsers(prev => {
+                  if (!prev.includes(userId)) {
+                      return [...prev, userId];
+                  }
+                  return prev;
+              });
+          };
+  
+          const handleUserOffline = (userId) => {
+              console.log("User offline:", userId);
+              setOnlineUsers(prev => prev.filter(id => id !== userId));
+          };
+  
+          // Get initial online users
+          socket.emit("getOnlineUsers");
+  
+          // Set up socket event listeners
+          socket.on("userOnline", handleUserOnline);
+          socket.on("userOffline", handleUserOffline);
+          socket.on("onlineUsers", (users) => {
+              console.log("Online users:", users);
+              setOnlineUsers(users);
+          });
+  
+          // Clean up socket event listeners
+          return () => {
+              socket.off("userOnline", handleUserOnline);
+              socket.off("userOffline", handleUserOffline);
+              socket.off("onlineUsers");
+          };
+      }, []);
+   const isUserOnline = useCallback((userId) => 
+          userId ? onlineUsers.includes(userId) : false, 
+          [onlineUsers]
+      );
 
   return (
     <div className="w-full bg-black p-6 h-screen flex flex-col shadow-xl">
@@ -63,7 +106,9 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend })
                   alt="Profile"
                   className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
                 />
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
+                {isUserOnline(friend.id) && (
+  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
+)}
               </div>
               <div className="ml-4 flex-1">
                 <p className="text-white font-semibold">{friend.name}</p>

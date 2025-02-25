@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar";
 import UserList from "../components/UserList";
 import FriendRequests from "../components/FriendRequests";
 import Profile from "../components/Profile";
-import ChatWindow from "../components/ChatWindow";
+import ChatWindow from "../components/chat/ChatWindow";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
