@@ -4,17 +4,18 @@ import { useCallback } from "react";
 import { io } from "socket.io-client";
 
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL; // Your backend URL
 
 const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend }) => {
   const [friends, setFriends] = useState([]);
   const [search, setSearch] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const socket = io("http://localhost:8081", { withCredentials: true });
+  const socket = io(import.meta.env.VITE_SOCKET_URL, { withCredentials: true });
 
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/api/friends", {
+        const response = await axios.get(`${API_URL}/friends`, {
           withCredentials: true,
         });
         setFriends(response.data);

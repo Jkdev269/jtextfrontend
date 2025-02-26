@@ -20,7 +20,9 @@ const Home = () => {
   }, [user, navigate]);
 
   if (!user) {
-    return <div className="text-white text-center mt-10">Loading...</div>;
+    return <div className="flex items-center justify-center h-full">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
   }
 
   return (
@@ -34,12 +36,13 @@ const Home = () => {
       <div className="flex-1">
         {selectedFriend ? (
           <ChatWindow selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
-        ) : activeTab === "users" ? (
-          <UserList />
-        ) : activeTab === "requests" ? (
-          <FriendRequests />
         ) : activeTab === "profile" ? (
           <Profile />
+        ) : activeTab === "requests" ? (
+          <FriendRequests />
+        ) : activeTab === "users" ? (
+          <UserList />
+          
         ) : null}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8081/api'; // Your backend URL
+const API_URL = import.meta.env.VITE_API_URL; // Your backend URL
+// const API_URL = 'http://localhost:8081/api'; // Your backend URL
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true, // Important: Send cookies (JWT)

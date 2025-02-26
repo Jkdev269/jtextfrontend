@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+const API_URL = import.meta.env.VITE_API_URL; // Your backend URL
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:8081/api/search", {
+      const response = await axios.get(`${API_URL}/search`, {
         withCredentials: true,
         params: { query: searchTerm || "" },
       });
@@ -25,7 +25,7 @@ const UserList = () => {
   const handleSendRequest = async (toUsername, fromUsername) => {
     try {
       await axios.post(
-        "http://localhost:8081/api/send-request",
+        `${API_URL}/send-request`,
         { fromUsername, toUsername },
         { withCredentials: true }
       );

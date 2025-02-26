@@ -6,11 +6,14 @@ import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
+import AgoraVideoCall from './AgoraVideoCall'; 
+import AgoraVoiceCall from './AgoraVoiceCall';
 import { debounce } from '../../utils/debounce';
 
 // Create a socket instance at module level (outside components)
 // This ensures it's not recreated on every render
-const socket = io("http://localhost:8081", { withCredentials: true });
+const API_URL = import.meta.env.VITE_API_URL; 
+const socket = io(import.meta.env.VITE_SOCKET_URL, { withCredentials: true });
 
 const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     const { user: loggedInUser } = useContext(AuthContext);
@@ -28,6 +31,10 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
     const seenMessagesRef = useRef(new Set());
     const [selectedImageModal, setSelectedImageModal] = useState(null);
     const [forceUpdate, setForceUpdate] = useState(0); // New state for forcing re-renders
+    const [inVideoCall, setInVideoCall] = useState(false);
+    const [incomingCall, setIncomingCall] = useState(null);
+    const [inVoiceCall, setInVoiceCall] = useState(false);
+    const [incomingVoiceCall, setIncomingVoiceCall] = useState(null);
 
     // Emit user online status when component mounts
     useEffect(() => {
@@ -78,6 +85,192 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
         };
     }, []);
 
+    useEffect(() => {
+        // Handle incoming voice call requests
+        const handleVoiceCallRequest = ({ callerId, callerName }) => {
+            // Only accept if the caller is the selected friend
+            if (callerId === selectedFriend?._id) {
+                setIncomingVoiceCall({
+                    callerId,
+                    callerName
+                });
+            }
+        };
+    
+        // Handle voice call acceptance
+        const handleVoiceCallAccepted = (callerId) => {
+            if (callerId === selectedFriend?._id) {
+                setInVoiceCall(true);
+            }
+        };
+    
+        // Handle voice call rejection or ending
+        const handleVoiceCallEnded = (callerId) => {
+            if (callerId === selectedFriend?._id) {
+                setInVoiceCall(false);
+                setIncomingVoiceCall(null);
+            }
+        };
+    
+        // Set up socket event listeners for voice calls
+        socket.on("voiceCallRequest", handleVoiceCallRequest);
+        socket.on("voiceCallAccepted", handleVoiceCallAccepted);
+        socket.on("voiceCallEnded", handleVoiceCallEnded);
+    
+        return () => {
+            socket.off("voiceCallRequest", handleVoiceCallRequest);
+            socket.off("voiceCallAccepted", handleVoiceCallAccepted);
+            socket.off("voiceCallEnded", handleVoiceCallEnded);
+        };
+    }, [selectedFriend]);
+    
+    // Add these functions to initiate and handle voice calls:
+    const initiateVoiceCall = () => {
+        if (!selectedFriend || !loggedInUser) return;
+        
+        // Emit voice call request via socket
+        socket.emit("voiceCallRequest", {
+            calleeId: selectedFriend._id,
+            callerId: loggedInUser._id,
+            callerName: loggedInUser.username
+        });
+        
+        // Set inVoiceCall to true to show the call interface
+        setInVoiceCall(true);
+    };
+    
+    const acceptIncomingVoiceCall = () => {
+        if (!incomingVoiceCall || !loggedInUser) return;
+        
+        // Emit voice call acceptance via socket
+        socket.emit("voiceCallAccepted", {
+            callerId: incomingVoiceCall.callerId,
+            calleeId: loggedInUser._id
+        });
+        
+        setInVoiceCall(true);
+        setIncomingVoiceCall(null);
+    };
+    
+    const rejectIncomingVoiceCall = () => {
+        if (!incomingVoiceCall || !loggedInUser) return;
+        
+        // Emit voice call rejection via socket
+        socket.emit("voiceCallRejected", {
+            callerId: incomingVoiceCall.callerId,
+            calleeId: loggedInUser._id
+        });
+        
+        setIncomingVoiceCall(null);
+    };
+    
+    const endVoiceCall = () => {
+        if (!selectedFriend || !loggedInUser) return;
+        
+        // Emit voice call ended via socket
+        socket.emit("voiceCallEnded", {
+            receiverId: selectedFriend._id,
+            senderId: loggedInUser._id
+        });
+        
+        setInVoiceCall(false);
+    };
+    
+    useEffect(() => {
+        // Handle incoming call requests
+        const handleCallRequest = ({ callerId, callerName }) => {
+            // Only accept if the caller is the selected friend
+            if (callerId === selectedFriend?._id) {
+                setIncomingCall({
+                    callerId,
+                    callerName
+                });
+            }
+        };
+
+        // Handle call acceptance
+        const handleCallAccepted = (callerId) => {
+            if (callerId === selectedFriend?._id) {
+                setInVideoCall(true);
+            }
+        };
+
+        // Handle call rejection or ending
+        const handleCallEnded = (callerId) => {
+            if (callerId === selectedFriend?._id) {
+                setInVideoCall(false);
+                setIncomingCall(null);
+            }
+        };
+
+        // Set up socket event listeners for calls
+        socket.on("callRequest", handleCallRequest);
+        socket.on("callAccepted", handleCallAccepted);
+        socket.on("callEnded", handleCallEnded);
+
+        return () => {
+            socket.off("callRequest", handleCallRequest);
+            socket.off("callAccepted", handleCallAccepted);
+            socket.off("callEnded", handleCallEnded);
+        };
+    }, [selectedFriend]);
+
+    // Rest of your existing code...
+    // (I'm not repeating all the existing functions for brevity)
+
+    // New functions for video call handling
+    const initiateVideoCall = () => {
+        if (!selectedFriend || !loggedInUser) return;
+        
+        // Emit call request via socket
+        socket.emit("callRequest", {
+            calleeId: selectedFriend._id,
+            callerId: loggedInUser._id,
+            callerName: loggedInUser.username
+        });
+        
+        // Set inVideoCall to true to show the call interface
+        setInVideoCall(true);
+    };
+
+    const acceptIncomingCall = () => {
+        if (!incomingCall || !loggedInUser) return;
+        
+        // Emit call acceptance via socket
+        socket.emit("callAccepted", {
+            callerId: incomingCall.callerId,
+            calleeId: loggedInUser._id
+        });
+        
+        setInVideoCall(true);
+        setIncomingCall(null);
+    };
+
+    const rejectIncomingCall = () => {
+        if (!incomingCall || !loggedInUser) return;
+        
+        // Emit call rejection via socket
+        socket.emit("callRejected", {
+            callerId: incomingCall.callerId,
+            calleeId: loggedInUser._id
+        });
+        
+        setIncomingCall(null);
+    };
+
+    const endCall = () => {
+        if (!selectedFriend || !loggedInUser) return;
+        
+        // Emit call ended via socket
+        socket.emit("callEnded", {
+            receiverId: selectedFriend._id,
+            senderId: loggedInUser._id
+        });
+        
+        setInVideoCall(false);
+    };
+
+
     const isElementVisible = useCallback((el) => {
         if (!messageListRef.current) return false;
         const rect = el.getBoundingClientRect();
@@ -113,7 +306,7 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
             setForceUpdate(prev => prev + 1);
     
             const response = await axios.put(
-                `http://localhost:8081/api/private-messages/seen/${messageId}`,
+                `${API_URL}/private-messages/seen/${messageId}`,
                 { userId: loggedInUser._id },
                 { withCredentials: true }
             );
@@ -194,7 +387,7 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
             setLoadingMessages(true);
             try {
                 const response = await axios.get(
-                    `http://localhost:8081/api/private-messages/${selectedFriend.username}/${loggedInUser.username}`,
+                    `${API_URL}/private-messages/${selectedFriend.username}/${loggedInUser.username}`,
                     { withCredentials: true }
                 );
                 
@@ -371,7 +564,7 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
             }
             
             const response = await axios.post(
-                "http://localhost:8081/api/private-messages/send",
+                `${API_URL}/private-messages/send`,
                 formData,
                 { withCredentials: true, headers: { "Content-Type": "multipart/form-data" }}
             );
@@ -472,39 +665,103 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
     return (
         <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-            <ChatHeader 
-                selectedFriend={selectedFriend}
-                setSelectedFriend={setSelectedFriend}
-                isUserOnline={isUserOnline}
-            />
-            
-            <MessageList 
-                messageListRef={messageListRef}
-                loadingMessages={loadingMessages}
-                messages={messages}
+            {inVoiceCall ? (
+            <AgoraVoiceCall 
                 selectedFriend={selectedFriend}
                 loggedInUser={loggedInUser}
-                getMessageStatus={getMessageStatus}
-                setSelectedImageModal={setSelectedImageModal}
-                messageStatus={messageStatus} // Pass the messageStatus state
-                forceUpdate={forceUpdate} // Add forceUpdate to trigger re-renders
+                onEndCall={endVoiceCall}
             />
-            
-            <ChatInput 
-                message={message}
-                setMessage={setMessage}
-                imagePreview={imagePreview}
-                removeSelectedImage={removeSelectedImage}
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
-                handleEmojiClick={handleEmojiClick}
-                fileInputRef={fileInputRef}
-                handleImageUpload={handleImageUpload}
-                messageInputRef={messageInputRef}
-                sendMessage={sendMessage}
+        ) : inVideoCall ? (
+            <AgoraVideoCall 
                 selectedFriend={selectedFriend}
                 loggedInUser={loggedInUser}
+                onEndCall={endCall}
             />
+        ) : (
+            <>
+                <ChatHeader 
+                    selectedFriend={selectedFriend}
+                    setSelectedFriend={setSelectedFriend}
+                    isUserOnline={isUserOnline}
+                    onVideoCallClick={initiateVideoCall}
+                    onVoiceCallClick={initiateVoiceCall} // Add this prop
+                />
+                    
+                    <MessageList 
+                        messageListRef={messageListRef}
+                        loadingMessages={loadingMessages}
+                        messages={messages}
+                        selectedFriend={selectedFriend}
+                        loggedInUser={loggedInUser}
+                        getMessageStatus={getMessageStatus}
+                        setSelectedImageModal={setSelectedImageModal}
+                        messageStatus={messageStatus}
+                        forceUpdate={forceUpdate}
+                    />
+                    
+                    <ChatInput 
+                        message={message}
+                        setMessage={setMessage}
+                        imagePreview={imagePreview}
+                        removeSelectedImage={removeSelectedImage}
+                        showEmojiPicker={showEmojiPicker}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        handleEmojiClick={handleEmojiClick}
+                        fileInputRef={fileInputRef}
+                        handleImageUpload={handleImageUpload}
+                        messageInputRef={messageInputRef}
+                        sendMessage={sendMessage}
+                        selectedFriend={selectedFriend}
+                        loggedInUser={loggedInUser}
+                    />
+                </>
+            )}
+              {incomingVoiceCall && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+                <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+                    <h3 className="text-xl font-semibold mb-4">
+                        Incoming voice call from {incomingVoiceCall.callerName}
+                    </h3>
+                    <div className="flex justify-center space-x-4">
+                        <button 
+                            onClick={acceptIncomingVoiceCall}
+                            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full"
+                        >
+                            Accept
+                        </button>
+                        <button 
+                            onClick={rejectIncomingVoiceCall}
+                            className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full"
+                        >
+                            Decline
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+             {incomingCall && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+                        <h3 className="text-xl font-semibold mb-4">
+                            Incoming call from {incomingCall.callerName}
+                        </h3>
+                        <div className="flex justify-center space-x-4">
+                            <button 
+                                onClick={acceptIncomingCall}
+                                className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full"
+                            >
+                                Accept
+                            </button>
+                            <button 
+                                onClick={rejectIncomingCall}
+                                className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full"
+                            >
+                                Decline
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             <ImageModal 
                 selectedImageModal={selectedImageModal}

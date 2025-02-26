@@ -16,16 +16,33 @@ const Signup = ({ onClose, onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage('');
+    setMessage(''); // Clear any previous messages
     try {
       const response = await signupUser(formData);
+
+      // Check if response.data exists and has a message property
+      if (response && response.data && response.data.message) {
+        setMessage(response.data.message);
+      } else {
+        setMessage('Signup successful!'); // Default success message
+      }
+
+      // Redirect *after* setting the message to avoid potential race conditions
       navigate('/login');
-      setMessage(response.data.message || 'Signup successful! You can now log in.');
       setFormData({ username: '', email: '', password: '' });
+
     } catch (error) {
-      setMessage(error.message || 'Signup failed. Try again.');
+      // Improved error handling: Check for a response and a message
+      if (error.response && error.response.data && error.response.data.message) {
+        setMessage(error.response.data.message);
+      } else if (error.message) {
+        setMessage(error.message); // Use the general error message if available
+      } else {
+        setMessage('Signup failed. Please try again.'); // Generic error
+      }
+    } finally {
+      setIsLoading(false); // Ensure isLoading is always set to false
     }
-    setIsLoading(false);
   };
 
   return (
