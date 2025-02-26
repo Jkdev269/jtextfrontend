@@ -1,6 +1,6 @@
 import { BsTelephone, BsCameraVideo } from "react-icons/bs";
 
-const ChatHeader = ({ selectedFriend, setSelectedFriend, isUserOnline }) => {
+const ChatHeader = ({ selectedFriend, setSelectedFriend, isUserOnline, onVoiceCallClick, onVideoCallClick }) => {
   return (
     <div className="flex items-center justify-between p-6 bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50">
       <div className="flex items-center space-x-4">
@@ -41,10 +41,16 @@ const ChatHeader = ({ selectedFriend, setSelectedFriend, isUserOnline }) => {
       </div>
 
       <div className="flex items-center space-x-2">
-        <button className="p-3 rounded-full hover:bg-gray-800/50 transition-all duration-300 group">
+        <button 
+          onClick={onVoiceCallClick} 
+          className="p-3 rounded-full hover:bg-gray-800/50 transition-all duration-300 group"
+        >
           <BsTelephone className="h-5 w-5 text-gray-400 group-hover:text-blue-400" />
         </button>
-        <button className="p-3 rounded-full hover:bg-gray-800/50 transition-all duration-300 group">
+        <button 
+          onClick={onVideoCallClick} 
+          className="p-3 rounded-full hover:bg-gray-800/50 transition-all duration-300 group"
+        >
           <BsCameraVideo className="h-5 w-5 text-gray-400 group-hover:text-blue-400" />
         </button>
       </div>

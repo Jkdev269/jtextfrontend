@@ -1,5 +1,5 @@
 // steamCallApi.js
-import * as Steamworks from 'steamworks.js';
+import * as Steamworks from "@stream-io/video-react-sdk";
 
 let steamClient = null;
 const apiKey = "your-api-key";
@@ -26,6 +26,8 @@ export const initSteamCall = async ({ token, isInitiator, enableVideo, socket, s
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
     } catch (error) {
         console.error("Error getting media stream:", error);
+        alert("Unable to access media devices. Please check your permissions.");
+
         throw error; // Re-throw to handle in ChatWindow
     }
 
@@ -53,6 +55,8 @@ export const initSteamCall = async ({ token, isInitiator, enableVideo, socket, s
             socket.emit("callOffer", { offer, target: selectedFriend._id, sender: userId, callId: callId });
         } catch (error) {
             console.error("Error creating/sending offer:", error);
+            alert("Failed to create or send the call offer. Please try again.");
+
             throw error;
         }
     }
