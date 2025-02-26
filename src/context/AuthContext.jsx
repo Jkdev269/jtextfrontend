@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import { getUserProfile } from "../api/api";
+import axios from "axios";
 
 export const AuthContext = createContext();
 
@@ -28,11 +29,20 @@ export const AuthProvider = ({ children }) => {
   
     fetchUser();
   }, []);
-  // Logout function
-  const logout = () => {
-    setUser(null); // Clear user state
-    navigate("/login"); // Redirect to login page
-  };
+    // Logout function
+    const logout = async () => {
+      try {
+        await axios.post(
+          "http://localhost:8081/api/auth/logout", // Adjust to your backend logout route
+          {},
+          { withCredentials: true } // Ensure cookies are sent
+        );
+        setUser(null); // Clear user state
+        navigate("/login"); // Redirect to login page
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
+    };
 
   return (
     <AuthContext.Provider value={{user,setUser,isLoading,logout }}>

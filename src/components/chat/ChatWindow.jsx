@@ -665,28 +665,32 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
 
     return (
         <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+            
+            {/* Handle Ongoing Calls */}
             {inVoiceCall ? (
-            <AgoraVoiceCall 
-                selectedFriend={selectedFriend}
-                loggedInUser={loggedInUser}
-                onEndCall={endVoiceCall}
-            />
-        ) : inVideoCall ? (
-            <AgoraVideoCall 
-                selectedFriend={selectedFriend}
-                loggedInUser={loggedInUser}
-                onEndCall={endCall}
-            />
-        ) : (
-            <>
-                <ChatHeader 
+                <AgoraVoiceCall 
                     selectedFriend={selectedFriend}
-                    setSelectedFriend={setSelectedFriend}
-                    isUserOnline={isUserOnline}
-                    onVideoCallClick={initiateVideoCall}
-                    onVoiceCallClick={initiateVoiceCall} // Add this prop
+                    loggedInUser={loggedInUser}
+                    onEndCall={endVoiceCall}
                 />
-                    
+            ) : inVideoCall ? (
+                <AgoraVideoCall 
+                    selectedFriend={selectedFriend}
+                    loggedInUser={loggedInUser}
+                    onEndCall={endCall}
+                />
+            ) : (
+                <>
+                    {/* Chat Header */}
+                    <ChatHeader 
+                        selectedFriend={selectedFriend}
+                        setSelectedFriend={setSelectedFriend}
+                        isUserOnline={isUserOnline}
+                        onVideoCallClick={initiateVideoCall}
+                        onVoiceCallClick={initiateVoiceCall}
+                    />
+
+                    {/* Message List */}
                     <MessageList 
                         messageListRef={messageListRef}
                         loadingMessages={loadingMessages}
@@ -698,7 +702,8 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                         messageStatus={messageStatus}
                         forceUpdate={forceUpdate}
                     />
-                    
+
+                    {/* Chat Input */}
                     <ChatInput 
                         message={message}
                         setMessage={setMessage}
@@ -716,44 +721,25 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                     />
                 </>
             )}
-              {incomingVoiceCall && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-                <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-                    <h3 className="text-xl font-semibold mb-4">
-                        Incoming voice call from {incomingVoiceCall.callerName}
-                    </h3>
-                    <div className="flex justify-center space-x-4">
-                        <button 
-                            onClick={acceptIncomingVoiceCall}
-                            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full"
-                        >
-                            Accept
-                        </button>
-                        <button 
-                            onClick={rejectIncomingVoiceCall}
-                            className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full"
-                        >
-                            Decline
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
-             {incomingCall && (
+
+            {/* Incoming Call UI */}
+            {(incomingVoiceCall || incomingCall) && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
                         <h3 className="text-xl font-semibold mb-4">
-                            Incoming call from {incomingCall.callerName}
+                            {incomingVoiceCall
+                                ? `Incoming voice call from ${incomingVoiceCall.callerName}`
+                                : `Incoming call from ${incomingCall.callerName}`}
                         </h3>
                         <div className="flex justify-center space-x-4">
                             <button 
-                                onClick={acceptIncomingCall}
+                                onClick={incomingVoiceCall ? acceptIncomingVoiceCall : acceptIncomingCall}
                                 className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full"
                             >
                                 Accept
                             </button>
                             <button 
-                                onClick={rejectIncomingCall}
+                                onClick={incomingVoiceCall ? rejectIncomingVoiceCall : rejectIncomingCall}
                                 className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full"
                             >
                                 Decline
@@ -762,7 +748,8 @@ const ChatWindow = ({ selectedFriend, setSelectedFriend }) => {
                     </div>
                 </div>
             )}
-            
+
+            {/* Image Modal */}
             <ImageModal 
                 selectedImageModal={selectedImageModal}
                 setSelectedImageModal={setSelectedImageModal}

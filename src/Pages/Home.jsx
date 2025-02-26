@@ -20,7 +20,7 @@ const Home = () => {
   }, [user, navigate]);
 
   if (!user) {
-    return <div className="flex items-center justify-center h-full">
+    return <div className=" bg-black flex items-center justify-center h-full">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
   </div>
   }
@@ -33,7 +33,7 @@ const Home = () => {
       </div>
 
       {/* Content Section */}
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {selectedFriend ? (
           <ChatWindow selectedFriend={selectedFriend} setSelectedFriend={setSelectedFriend} />
         ) : activeTab === "profile" ? (

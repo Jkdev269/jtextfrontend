@@ -13,7 +13,7 @@ const MessageList = ({
   return (
     <div 
       ref={messageListRef}
-      className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+      className="flex-1 overflow-y-auto p-6 space-y-6  scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
     >
       {loadingMessages ? (
         <div className="flex items-center justify-center h-full">
