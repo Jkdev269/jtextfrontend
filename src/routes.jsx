@@ -6,6 +6,7 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { useContext } from "react";
 import Page from "./Pages/Page";
 import { Toaster } from "react-hot-toast";
+import JtextLandingPage from "./LandingPage/JtextLandingPage";
 
 const PrivateRoute = ({ children }) => {
   const { user,isLoading } = useContext(AuthContext);
@@ -28,7 +29,9 @@ const AppRoutes = () => {
         <Toaster position="bottom-right" />
      <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Page />} />
+          <Route path="/login" element={<JtextLandingPage />} />
+          {/* <Route path="/login" element={<Page />} />
+           */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/login" />} />

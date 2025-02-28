@@ -50,7 +50,7 @@ const UserList = () => {
       <ul className="flex flex-col gap-2">
         {users.length > 0 ? (
           users.map((user) => (
-            <li key={user._id} className="p-3 bg-gray-900 rounded-md flex items-center justify-between">
+            <li key={user._id} className="p-3 bg-gray-900/40  rounded-md flex items-center justify-between">
               <div className="flex items-center">
                 <img
                   src={user.profileImage}

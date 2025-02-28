@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { signInWithGoogle, signInWithGitHub } from "../api/api"; 
 import Login from "./Login";
 import Signup from "./Signup";
 import logo from "../assets/logo.png";
@@ -6,6 +7,7 @@ import logo from "../assets/logo.png";
 function Page() {
   const [showPopup, setshowPopup] = useState(false);
   const [showloginPopup, setshowloginPopup] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handelOpenPopup = () => {
     setshowPopup(true);
@@ -25,6 +27,36 @@ function Page() {
     setshowloginPopup(false);
   };
 
+   const handleGoogleSignIn = async () => {
+      setMessage("");
+      try {
+        const response = await signInWithGoogle();
+        if (response.user) {
+          setUser(response.user);
+          navigate("/", { replace: true });
+        } else {
+          setMessage(response.message);
+        }
+      } catch (error) {
+        setMessage("Google sign-in failed. Please try again.");
+      }
+    };
+  
+    const handleGitHubSignIn = async () => {
+      setMessage("");
+      try {
+        const response = await signInWithGitHub();
+        if (response.user) {
+          setUser(response.user);
+          navigate("/", { replace: true });
+        } else {
+          setMessage(response.message);
+        }
+      } catch (error) {
+        setMessage("GitHub sign-in failed. Please try again.");
+      }
+    };
+
   return (
     <>
       <div className="flex flex-col sm:flex-row items-center min-h-screen bg-black text-white justify-center px-6 py-10">
@@ -40,11 +72,11 @@ function Page() {
           <h2 className="text-xl sm:text-2xl mb-6">Join today.</h2>
 
           {/* Signup Buttons */}
-          <button className="flex items-center justify-center w-full py-3 mb-4 text-black bg-white rounded-full font-bold transition duration-300 hover:bg-gray-200">
+          <button className="flex items-center justify-center w-full py-3 mb-4 text-black bg-white rounded-full font-bold transition duration-300 hover:bg-gray-200" onClick={handleGoogleSignIn}>
             <img className="w-5 h-5 mr-2" src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google icon" />
             Sign up with Google
           </button>
-          <button className="flex items-center justify-center w-full py-3 mb-4 bg-gray-800 text-white rounded-full font-bold transition duration-300 hover:bg-gray-700">
+          <button className="flex items-center justify-center w-full py-3 mb-4 bg-gray-800 text-white rounded-full font-bold transition duration-300 hover:bg-gray-700"  onClick={handleGitHubSignIn}>
             <img className="w-5 h-5 mr-2" src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub icon" />
             Sign up with GitHub
           </button>

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider, githubProvider } from "../firebase/config";
 
 const API_URL = import.meta.env.VITE_API_URL; // Your backend URL
 // const API_URL = 'http://localhost:8081/api'; // Your backend URL
@@ -56,7 +58,7 @@ export const loginUser = async (formData) => {
 
 export const uploadProfileImage = async (formData) => {
   try {
-      const response = await axios.post("http://localhost:8081/api/user/upload-profile", formData, {
+      const response = await axios.post(`${API_URL}/user/upload-profile`, formData, {
           withCredentials: true, // Ensure cookies are sent for authentication
           headers: { "Content-Type": "multipart/form-data" }, // Important for file uploads
       });
@@ -185,5 +187,47 @@ export const sendGroupMessage = async (messageData) => {
     return response.data;
   } catch (error) {
     return error.response?.data || 'Failed to send group message';
+  }
+};
+
+export const signInWithGoogle = async () => {
+  try {
+    // This opens a Google sign-in popup window
+    const result = await signInWithPopup(auth, googleProvider);
+    
+    // After successful Google login, we get the user info
+    const firebaseUser = result.user;
+    
+    // Now send this info to your backend
+    const response = await axios.post(`${API_URL}/auth/social-login`, {
+      email: firebaseUser.email,
+      username: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+      profileImage: firebaseUser.photoURL || 'https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png',
+      withCredentials: true,
+    });
+    
+    return { user: response.data.user };
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    return { message: "Google sign-in failed. Please try again." };
+  }
+};
+
+// For GitHub Login - works exactly the same way
+export const signInWithGitHub = async () => {
+  try {
+    const result = await signInWithPopup(auth, githubProvider);
+    const firebaseUser = result.user;
+    
+    const response = await axios.post(`${API_URL}/auth/social-login`, {
+      email: firebaseUser.email,
+      username: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+      profileImage: firebaseUser.photoURL || 'https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png'
+    });
+    
+    return { user: response.data.user };
+  } catch (error) {
+    console.error("GitHub sign-in error:", error);
+    return { message: "GitHub sign-in failed. Please try again." };
   }
 };

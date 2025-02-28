@@ -44,7 +44,7 @@ const FriendRequests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6 flex flex-col items-center text-white overflow-y-auto">
+    <div className="min-h-screen bg-black p-6 flex flex-col items-center text-white overflow-y-auto">
       <h2 className="text-2xl font-semibold mb-4 text-center">🤝 Friend Requests</h2>
       {requests.length === 0 ? (
         <p className="text-gray-400 text-center">No friend requests available.</p>

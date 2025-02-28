@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Search, UserCircle, Users, UserPlus, Menu } from "lucide-react";
 import { io } from "socket.io-client";
 import axios from "axios";
+import logo from "../assets/logo.png";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
@@ -70,7 +71,9 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend })
       >
         <div className="flex flex-col h-full">
           <div className="mb-8">
-            <h2 className="text-white text-2xl font-bold">Chats</h2>
+            <div className="flex justify-center ">
+                      <img src={logo} alt="JK Logo" className="w-12 h-12 object-contain" />
+                    </div>
             <p className="text-gray-400 text-sm mt-1">Connect with your friends</p>
           </div>
 
@@ -85,12 +88,13 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend })
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
+          <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800 scrollbar-hidden">
             {filteredFriends.length === 0 ? (
               <div className="text-gray-400 text-center py-8">
-                <div className="flex items-center justify-center h-full">
+                {/* <div className="flex items-center justify-center h-full">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
+                </div> */}
+                <h1>you have no friends</h1>
               </div>
             ) : (
               filteredFriends.map((friend) => (
@@ -124,47 +128,48 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedFriend, selectedFriend })
           </div>
 
           {/* Sidebar Buttons */}
-          <div className="mt-6 space-y-3 pt-6 border-t border-gray-700">
-            <button
-              className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "profile" ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-              onClick={() => {
-                setSelectedFriend(null);
-                setActiveTab("profile");
-                setSidebarOpen(false);
-              }}
-            >
-              <UserCircle className="w-5 h-5" />
-              Profile
-            </button>
-            <button
-              className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "requests" ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-              onClick={() => {
-                setSelectedFriend(null);
-                setActiveTab("requests");
-                setSidebarOpen(false);
-              }}
-            >
-              <UserPlus className="w-5 h-5" />
-              Friend Requests
-            </button>
-            <button
-              className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                activeTab === "users" ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-              onClick={() => {
-                setSelectedFriend(null);
-                setActiveTab("users");
-                setSidebarOpen(false);
-              }}
-            >
-              <Users className="w-5 h-5" />
-              All Users
-            </button>
-          </div>
+          {/* Sidebar Buttons */}
+<div className="mt-auto space-y-3 pt-5 border-t border-gray-700">
+  <button
+    className={`w-full p-0 rounded-lg flex items-center gap-3 transition-colors 
+    ${activeTab === "profile" ? "text-blue-500" : "text-gray-300 hover:text-white"}`}
+    onClick={() => {
+      setSelectedFriend(null);
+      setActiveTab("profile");
+      setSidebarOpen(false);
+    }}
+  >
+    <UserCircle className="w-5 h-5" />
+    Profile
+  </button>
+
+  <button
+    className={`w-full p-0 rounded-lg flex items-center gap-3 transition-colors 
+    ${activeTab === "requests" ? "text-blue-500" : "text-gray-300 hover:text-white"}`}
+    onClick={() => {
+      setSelectedFriend(null);
+      setActiveTab("requests");
+      setSidebarOpen(false);
+    }}
+  >
+    <UserPlus className="w-5 h-5" />
+    Friend Requests
+  </button>
+
+  <button
+    className={`w-full p-0 rounded-lg flex items-center gap-3 transition-colors 
+    ${activeTab === "users" ? "text-blue-500" : "text-gray-300 hover:text-white"}`}
+    onClick={() => {
+      setSelectedFriend(null);
+      setActiveTab("users");
+      setSidebarOpen(false);
+    }}
+  >
+    <Users className="w-5 h-5" />
+    All Users
+  </button>
+</div>
+
         </div>
       </div>
 
