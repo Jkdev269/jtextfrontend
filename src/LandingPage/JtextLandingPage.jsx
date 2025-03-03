@@ -4,6 +4,8 @@ import Hero from "./Hero";
 import Header from "./Header";
 import HowItWorks from "./HowItWorks";
 import FAQ from "./FAQ";
+import ContactUs from "./ContactUs";
+import Footer from "./Footer";
 
 function JtextLandingPage() {
   
@@ -15,6 +17,8 @@ function JtextLandingPage() {
        <Features/>
        <HowItWorks/>
        <FAQ/>
+       <ContactUs/>
+       <Footer/>
       </main>
     </div>
   );

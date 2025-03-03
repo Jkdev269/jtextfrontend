@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AnchorLink from 'react-anchor-link-smooth-scroll';
 
 function FAQ() {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -192,7 +193,7 @@ function FAQ() {
           {/* More Questions */}
           <div className="mt-12 text-center animate__animated animate__fadeIn">
             <p className="text-lg mb-4">Still have questions? We're here to help!</p>
-            <a
+            <AnchorLink
               href="#contact"
               className="inline-flex items-center px-6 py-3 bg-[#4A6FFF] text-white font-semibold rounded-lg shadow-lg hover:bg-[#3A5FEF] transition duration-300"
             >
@@ -204,7 +205,7 @@ function FAQ() {
                   clipRule="evenodd"
                 />
               </svg>
-            </a>
+            </AnchorLink>
           </div>
         </div>
       </div>

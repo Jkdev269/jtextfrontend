@@ -19,7 +19,7 @@ const PrivateRoute = ({ children }) => {
   </div>
     } // Prevent redirect before checking state
   
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/Jtext" />;
 };
 
 
@@ -29,12 +29,12 @@ const AppRoutes = () => {
         <Toaster position="bottom-right" />
      <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<JtextLandingPage />} />
-          {/* <Route path="/login" element={<Page />} />
-           */}
+          <Route path="/Jtext" element={<JtextLandingPage />} />
+          <Route path="/loginpage" element={<Page />}/>
+          {/* <Route path="/login" element={<Signup />} />  */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/Jtext" />} />
         </Routes>
     </BrowserRouter>
           </AuthProvider>

@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
           { withCredentials: true } // Ensure cookies are sent
         );
         setUser(null); // Clear user state
-        navigate("/login"); // Redirect to login page
+        navigate("/Jtext"); // Redirect to login page
       } catch (error) {
         console.error("Logout failed:", error);
       }

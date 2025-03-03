@@ -1,7 +1,10 @@
+import { Anchor } from 'lucide-react'
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 function Hero() {
   return (
+    
     <section
           id="hero"
           className="bg-neutral-900 text-white min-h-[60vh] flex items-center"
@@ -19,15 +22,13 @@ function Hero() {
                   and express yourself with rich media sharing.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <a
-                    href="#download"
+                  <Link
+                    to="/loginpage"
+                    
                     className="px-6 py-3 bg-[#4A6FFF] text-white font-semibold rounded-lg shadow-lg hover:bg-[#3A5FEF] transition duration-300 animate__animated animate__pulse animate__infinite animate__slower"
                   >
                     Get Started Free
-                  </a>
-                  {/* <a href="#how-it-works" className="px-6 py-3 bg-transparent border-2 border-[#4A6FFF] text-white font-semibold rounded-lg hover:bg-[#4A6FFF]/20 transition duration-300">
-              Learn More
-            </a> */}
+                  </Link>
                 </div>
                 <div className="mt-8 flex items-center">
                   <div className="flex -space-x-2">

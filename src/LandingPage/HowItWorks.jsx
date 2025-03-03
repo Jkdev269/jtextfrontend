@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function HowItWorks() {
   return (
@@ -38,13 +39,7 @@ function HowItWorks() {
               </div>
             </div>
             <div className="md:w-1/2 md:pl-12 text-center md:text-left">
-              {/* <div className="bg-neutral-800 p-6 rounded-xl shadow-lg md:hidden inline-block mb-8">
-              <div className="w-full h-48 bg-neutral-700 rounded-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </div>
-            </div> */}
+             
               <div className=" md:block relative">
                 <div className="bg-neutral-700 p-1 rounded-xl overflow-hidden shadow-lg">
                   <div className="bg-neutral-800 rounded-lg p-4">
@@ -108,13 +103,7 @@ function HowItWorks() {
               </div>
             </div>
             <div className="md:w-1/2 md:pl-12 text-center md:text-right order-3 md:order-3">
-              {/* <div className="bg-neutral-800 p-6 rounded-xl shadow-lg md:hidden inline-block mb-8">
-              <div className="w-full h-48 bg-neutral-700 rounded-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div> */}
+             
               <div className=" md:block relative">
                 <div className="bg-neutral-700 p-1 rounded-xl overflow-hidden shadow-lg">
                   <div className="bg-neutral-800 rounded-lg p-4">
@@ -209,13 +198,7 @@ function HowItWorks() {
               </div>
             </div>
             <div className="md:w-1/2 md:pl-12 text-center md:text-left">
-              {/* <div className="bg-neutral-800 p-6 rounded-xl shadow-lg md:hidden inline-block mb-8">
-              <div className="w-full h-48 bg-neutral-700 rounded-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </div>
-            </div> */}
+             
               <div className=" md:block relative">
                 <div className="bg-neutral-700 p-1 rounded-xl overflow-hidden shadow-lg">
                   <div className="bg-neutral-800 rounded-lg p-4">
@@ -269,13 +252,7 @@ function HowItWorks() {
               </div>
             </div>
             <div className="md:w-1/2 md:pl-12 text-center md:text-right order-3 md:order-3">
-              {/* <div className="bg-neutral-800 p-6 rounded-xl shadow-lg md:hidden inline-block mb-8">
-              <div className="w-full h-48 bg-neutral-700 rounded-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-            </div> */}
+             
               <div className=" md:block relative">
                 <div className="bg-neutral-700 p-1 rounded-xl overflow-hidden shadow-lg">
                   <div className="bg-neutral-800 rounded-lg">
@@ -505,8 +482,8 @@ function HowItWorks() {
         </div>
 
         <div className="mt-20 text-center">
-          <a
-            href="#download"
+          <Link
+           to={"/loginpage"}
             className="inline-flex items-center px-8 py-4 bg-[#4A6FFF] text-white font-semibold rounded-lg shadow-lg hover:bg-[#3A5FEF] transition duration-300 animate__animated animate__pulse animate__infinite animate__slower"
           >
             <span>Start Connecting Now</span>
@@ -522,7 +499,7 @@ function HowItWorks() {
                 clipRule="evenodd"
               />
             </svg>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
