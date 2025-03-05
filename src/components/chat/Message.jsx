@@ -1,4 +1,5 @@
 import { useState } from "react";
+const ServerUrl=import.meta.env.VITE_SERVER_URL
 
 const Message = ({
   message,
@@ -26,12 +27,12 @@ const Message = ({
         {message.imageUrl && (
           <div className="mb-2">
             <img
-              src={`http://localhost:8081${message.imageUrl}`}
+              src={`${ServerUrl}${message.imageUrl}`}
               alt="Message attachment"
               className="rounded-lg max-w-sm hover:opacity-90 transition-opacity cursor-pointer"
               onClick={() =>
                 setSelectedImageModal(
-                  `http://localhost:8081${message.imageUrl}`
+                  `${ServerUrl}${message.imageUrl}`
                 )
               }
             />
@@ -61,11 +62,11 @@ const Message = ({
               minute: "2-digit",
             })}
           </span>
-          {isOwnMessage && (
+          {/* {isOwnMessage && (
             <span className="text-xs text-white/60">
               {getMessageStatus(message) === "seen" ? "✓✓" : "✓"}
             </span>
-          )}
+          )} */}
         </div>
       </div>
     </div>

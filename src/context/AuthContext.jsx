@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   
   
   useEffect(() => {
-    console.log("AuthContext user state:", user);
+    // console.log("AuthContext user state:", user);
   }, [user]);
 
   useEffect(() => {
@@ -18,9 +18,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const userData = await getUserProfile();
         setUser(userData);
-        console.log("User data fetched on load:", userData);
+        // console.log("User data fetched on load:", userData);
       } catch (error) {
-        console.log("No user found, staying logged out.");
+        // console.log("No user found, staying logged out.");
         setUser(null);
       }finally {
         setIsLoading(false); // Set loading to false regardless of outcome
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null); // Clear user state
         navigate("/Jtext"); // Redirect to login page
       } catch (error) {
-        console.error("Logout failed:", error);
+        // console.error("Logout failed:", error);
       }
     };
 

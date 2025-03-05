@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
-const Login = ({ onClose, onSignUp }) => {
+const Login = ({ onClose, onSignUp,onForgotPassword }) => {
   const { setUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPasswordField, setShowPasswordField] = useState(false);
@@ -39,6 +39,35 @@ const Login = ({ onClose, onSignUp }) => {
       setMessage(error.response?.data?.message || "Login failed. Try again.");
     }
   };
+  const handleGoogleSignIn = async () => {
+    setMessage("");
+    try {
+      const response = await signInWithGoogle();
+      if (response.user) {
+        setUser(response.user);
+        navigate("/", { replace: true });
+      } else {
+        setMessage(response.message);
+      }
+    } catch (error) {
+      setMessage("Google sign-in failed. Please try again.");
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    setMessage("");
+    try {
+      const response = await signInWithGitHub();
+      if (response.user) {
+        setUser(response.user);
+        navigate("/", { replace: true });
+      } else {
+        setMessage(response.message);
+      }
+    } catch (error) {
+      setMessage("GitHub sign-in failed. Please try again.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 z-50 p-4">
@@ -59,14 +88,14 @@ const Login = ({ onClose, onSignUp }) => {
             <>
               <button
                 className="bg-white text-black w-full py-3 rounded-full flex items-center justify-center gap-2 mb-3"
-                onClick={signInWithGoogle}
+                onClick={handleGoogleSignIn}
               >
                 <img className="w-5 h-5" src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google" />
                 Sign in with Google
               </button>
               <button
                 className="bg-gray-800 text-white w-full py-3 rounded-full flex items-center justify-center gap-2 mb-4"
-                onClick={signInWithGitHub}
+                onClick={handleGitHubSignIn}
               >
                 <img className="w-5 h-5" src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" />
                 Sign in with GitHub
@@ -114,7 +143,8 @@ const Login = ({ onClose, onSignUp }) => {
           {showPasswordField && (
             <button
               className="text-white bg-transparent border border-gray-500 px-4 py-2 rounded-md mt-3"
-              onClick={() => navigate("/forgot-password")}
+              onClick={onForgotPassword}
+              // onClick={() => navigate("/forgot-password")}
             >
               Forgot password?
             </button>

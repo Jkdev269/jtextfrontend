@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes, Navigate, BrowserRouter } from "react-router-dom";
-// import Login from "./pages/Login";
+
 import Signup from "./Pages/Signup";
 import Home from "./Pages/Home";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
@@ -7,10 +7,12 @@ import { useContext } from "react";
 import Page from "./Pages/Page";
 import { Toaster } from "react-hot-toast";
 import JtextLandingPage from "./LandingPage/JtextLandingPage";
+import ForgotPassword from "./Pages/ForgotPassword";
+import Login from "./Pages/Login";
 
 const PrivateRoute = ({ children }) => {
   const { user,isLoading } = useContext(AuthContext);
-  console.log("PrivateRoute user:", user)
+  // console.log("PrivateRoute user:", user)
   
   if (isLoading) 
     {
@@ -31,8 +33,9 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/Jtext" element={<JtextLandingPage />} />
           <Route path="/loginpage" element={<Page />}/>
-          {/* <Route path="/login" element={<Signup />} />  */}
+          <Route path="/login" element={<Login />} /> 
           <Route path="/signup" element={<Signup />} />
+          {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/Jtext" />} />
         </Routes>

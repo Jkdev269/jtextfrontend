@@ -30,26 +30,7 @@ function Hero() {
                     Get Started Free
                   </Link>
                 </div>
-                <div className="mt-8 flex items-center">
-                  <div className="flex -space-x-2">
-                    <div className="w-10 h-10 rounded-full bg-[#FF6B6B] flex items-center justify-center text-white font-bold">
-                      A
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-[#6CD9CC] flex items-center justify-center text-white font-bold">
-                      B
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-[#4A6FFF] flex items-center justify-center text-white font-bold">
-                      C
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold">
-                      D
-                    </div>
-                  </div>
-                  <p className="ml-4 text-gray-300">
-                    Join <span className="font-bold text-white">10,000+</span> users
-                    already connecting
-                  </p>
-                </div>
+              
               </div>
 
               <div className="lg:w-1/2 relative animate__animated animate__fadeInRight">

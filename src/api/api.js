@@ -3,7 +3,7 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "../firebase/config";
 
 const API_URL = import.meta.env.VITE_API_URL; // Your backend URL
-// const API_URL = 'http://localhost:8081/api'; // Your backend URL
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true, // Important: Send cookies (JWT)
@@ -53,6 +53,26 @@ export const loginUser = async (formData) => {
   }
 };
 
+export const forgotPassword = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const resetPassword = async (resetToken, newPassword) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, { 
+      resetToken, 
+      newPassword 
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // Profile Routes
 
@@ -222,7 +242,9 @@ export const signInWithGitHub = async () => {
     const response = await axios.post(`${API_URL}/auth/social-login`, {
       email: firebaseUser.email,
       username: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-      profileImage: firebaseUser.photoURL || 'https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png'
+      profileImage: firebaseUser.photoURL || 'https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png',
+      withCredentials: true,
+
     });
     
     return { user: response.data.user };
