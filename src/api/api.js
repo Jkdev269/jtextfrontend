@@ -42,7 +42,9 @@ export const loginUser = async (formData) => {
     if (response.data?.user) {
       return response.data; // Returns user data if login is successful
     }
-
+    console.log("Login attempt to:", `${API_URL}/auth/login`);
+    console.log("With credentials:", true);
+    console.log("Cookie received:", document.cookie); // Check after response
     throw new Error("Invalid login response");
   } catch (error) {
     console.error("Login failed:", error.response?.data?.message || error.message);
