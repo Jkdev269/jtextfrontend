@@ -3,7 +3,7 @@ import { getUserProfile } from "../api/api";
 import axios from "axios";
 
 export const AuthContext = createContext();
-
+const API_URL = import.meta.env.VITE_API_URL;
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true); 
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
       try {
         await axios.post(
-          "http://localhost:8081/api/auth/logout", // Adjust to your backend logout route
+          `${API_URL}/auth/logout`, // Adjust to your backend logout route
           {},
           { withCredentials: true } // Ensure cookies are sent
         );
